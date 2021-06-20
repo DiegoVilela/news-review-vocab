@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<article>
+  <header>
+    <h1>{{ entry.term }}</h1>
+  </header>
+  <section>
+    <h2>{{ entry.meaning }}</h2>
+    <p>{{ entry.examples }}</p>
+  </section>
+  <aside>
+    <h2>Episode {{ entry.episode }}</h2>
+  </aside>
+</article>
+{% endblock %}

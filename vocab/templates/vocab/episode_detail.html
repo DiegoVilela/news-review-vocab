@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<article>
+  <header>
+    <h1>{{ episode.id }} - {{ episode.headline }}</h1>
+  </header>
+
+  {% for entry in episode.entry_set.all %}
+    <p><strong>{{ entry.term }}</strong></p>
+    <p><i>{{ entry.meaning }}</i></p>
+    <p class="examples">{{ entry.examples }}</p>
+    <hr>
+  {% endfor %}
+
+  <p>{{ episode.video }}</p>
+</article>
+{% endblock %}
