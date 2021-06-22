@@ -4,13 +4,11 @@
 <article>
   <header>
     <h1>{{ entry.term }}</h1>
+    <p>{{ entry.meaning }}</p>
   </header>
-  <section>
-    <h2>{{ entry.meaning }}</h2>
-    <p>{{ entry.examples }}</p>
-  </section>
+  <p class="examples">{{ entry.examples }}</p>
   <aside>
-    <h2>Episode {{ entry.episode }}</h2>
+    <h2>Episode <a href="{% url 'episode_detail' entry.episode.slug %}">{{ entry.episode }}</a></h2>
   </aside>
 </article>
 {% endblock %}

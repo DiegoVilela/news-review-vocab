@@ -12,6 +12,7 @@ class Episode(models.Model):
     )
     headline = models.CharField(max_length=128, unique=True)
     slug = models.SlugField(max_length=128, unique=True)
+    raw_content = models.TextField()
     video = models.CharField(
         max_length=11,
         unique=True,

@@ -7,9 +7,8 @@
   </header>
 
   {% for entry in episode.entry_set.all %}
-    <p><strong>{{ entry.term }}</strong></p>
+    <p><a href="{% url 'entry_detail' entry.term %}">{{ entry.term }}</a></p>
     <p><i>{{ entry.meaning }}</i></p>
-    <p class="examples">{{ entry.examples }}</p>
     <hr>
   {% endfor %}
 
