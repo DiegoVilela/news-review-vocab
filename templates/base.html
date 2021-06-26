@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+  <title>{% block title %}News Review Tracker{% endblock %}</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">News Review Tracker</a>
+      <ul>
+        <li><a href="#">About</a></li>
+        {% if user.is_authenticated %}
+          <li><a href="#">Account</a>
+            <ul>
+              <li><a href="#">Profile</a></li>
+              <li><a href="{% url 'account_logout' %}">Logout</a></li>
+            </ul>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% if not user.is_authenticated %}
+      <h1>Remember the <i>vocabulary</i><br>you learned on BBC News Review</h1>
+      <p>
+        <a href="{% url 'account_login' %}"><i>Log In</i></a>
+        <a href="{% url 'account_signup' %}"><b>Sign Up</b></a>
+      </p>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<article>
+  <h2>Terms to Revise</h2>
+  <div class="row">
+    <details>
+      <summary>first term</summary>
+        <p>the first term meaning</p>
+        <p>Example 1</p>
+        <p>Example 2</p>
+    </details>
+    <details>
+      <summary>second term</summary>
+        <p>the second term meaning</p>
+        <p>Example 1</p>
+        <p>Example 2</p>
+    </details>
+    <details>
+      <summary>third term</summary>
+        <p>the third term meaning</p>
+        <p>Example 1</p>
+        <p>Example 2</p>
+    </details>
+    <button>Mark all as revised</button>
+    <form>
+      <input type="search" name="search" placeholder="Search">
+    </form>
+  </div>
+</article>
+{% endblock %}

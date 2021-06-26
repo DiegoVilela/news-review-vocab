@@ -1,0 +1,18 @@
+:root {
+  --color: #426D54;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+}
+
+details, .row > button {
+  width: 100%;
+}
+
+.examples {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: #444;
+}

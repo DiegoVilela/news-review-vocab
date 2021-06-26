@@ -1,0 +1,4 @@
+__pycache__/
+.idea/
+staticfiles/
+db.sqlite3
