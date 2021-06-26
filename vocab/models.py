@@ -12,10 +12,12 @@ class Episode(models.Model):
     )
     headline = models.CharField(max_length=128, unique=True)
     slug = models.SlugField(max_length=128, unique=True)
+    date = models.DateField()
     raw_content = models.TextField()
     video = models.CharField(
         max_length=11,
         unique=True,
+        null=True,
         help_text="The videoId from Youtube."
     )
 
@@ -32,7 +34,7 @@ class Entry(models.Model):
     term = models.CharField(max_length=128, primary_key=True)
     slug = models.SlugField(max_length=128, unique=True)
     meaning = models.CharField(max_length=128)
-    examples = models.TextField(max_length=510)
+    examples = models.TextField(max_length=510, blank=True)
     episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
 
     def __str__(self):
