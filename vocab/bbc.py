@@ -15,13 +15,21 @@ UnitInfo = namedtuple('UnitInfo', ['unit', 'starting_episode', 'ending_episode']
 class NewsReview:
     def __init__(self):
         self.session = requests.Session()
-        self.dates = []
-        self.episodes = []
+        self._episodes = []
+        self._dates = []
 
-    def _get_dates(self, bs: BeautifulSoup):
+    def _parse_dates(self, bs: BeautifulSoup):
         items = bs.find_all('span', class_='date')
         for date in items:
-            self.dates.append(datetime.strptime(str(date.string), '%d %b %Y'))
+            self._dates.append(datetime.strptime(str(date.string), '%d %b %Y'))
+
+        idx = len(self._dates) - len(self._episodes)
+        for episode in self._episodes:
+            try:
+                episode.date = self._dates[idx]
+                idx += 1
+            except IndexError as e:
+                print(f'Error: {e}')
 
     def _get_unit_from_episode_id(self, ep_id):
         if ep_id <= 0:
@@ -92,7 +100,7 @@ class NewsReview:
 
         return content[1:]
 
-    def _parse_episode(self, content, episode_id: int, idx: int):
+    def _parse_episode(self, content, episode_id: int):
         bs = BeautifulSoup(content, features="html5lib")
         self._remove_links(bs)
         sections = bs.find_all('div', class_=re.compile('widget widget-richtext'))
@@ -106,26 +114,25 @@ class NewsReview:
             headline=headline,
             slug=slugify(headline),
             raw_content=ep_content,
-            date=self.dates[idx],
         )
         return episode
 
-    def _get_episode(self, episode_id, unit, idx=None):
+    def _get_episode(self, episode_id, unit):
         # Due to BBC bug
         if episode_id == 1:
             return False
 
         url_ep = f'{URL_BASE}{unit}/session-{episode_id}'
         try:
+            print(f'Getting episode {episode_id} ...')
             response = self.session.get(url_ep)
             response.raise_for_status()
-            print(f'Getting episode {episode_id} ...')
-            return self._parse_episode(response.content, episode_id, idx)
+            return self._parse_episode(response.content, episode_id)
         except requests.exceptions.RequestException as e:
-            print(f'Error: {e}')
+            print(f'Episode {episode_id} was not published yet.\n{e}')
             return False
 
-    def _get_episodes(self, bs: BeautifulSoup, unit: int, from_ep: int = None):
+    def _get_episodes(self, unit: int, from_ep: int = None):
         # Uses a unit to get episode dates, otherwise, one
         # more request would be necessary for each episode
         # as their pages don't have their dates
@@ -133,14 +140,13 @@ class NewsReview:
         start = from_ep or unit_info.starting_episode
         end = unit_info.ending_episode
 
-        idx = 0  # idx is used to merge episodes dates
         for episode_id in range(start, end + 1):
-            episode = self._get_episode(episode_id, unit, idx)
-            if episode:
-                self.episodes.append(episode)
-            idx += 1
+            episode = self._get_episode(episode_id, unit)
+            if not episode:
+                return False
+            self._episodes.append(episode)
 
-        return self.episodes
+        return self._episodes
 
     def get_unit(self, unit: int, from_ep: int = None):
         """Return all episodes of a given BBC News Review unit.
@@ -150,19 +156,16 @@ class NewsReview:
         https://www.bbc.co.uk/learningenglish/english/course/newsreview/unit-7
         """
 
+        episodes = self._get_episodes(unit, from_ep)
         url_unit = f'{URL_BASE}{unit}/'
-
-        print(f'Checking unit {unit}.')
-        try:
-            response = self.session.get(url_unit)
-            response.raise_for_status()
+        response = self.session.get(url_unit)
+        if response.ok:
             page = BeautifulSoup(response.content, features="html5lib")
-            self._get_dates(page)
-            episodes = self._get_episodes(page, unit, from_ep)
-            return episodes
-        except requests.exceptions.RequestException as e:
-            print(f'Error: {e}')
-            return False
+            self._parse_dates(page)
+            self._episodes = []
+            self._dates = []
+
+        return episodes
 
     def pull(self):
         """Synchronize database with BBC News Review.
@@ -170,20 +173,25 @@ class NewsReview:
         Return a list of episodes if any were added.
         """
 
-        result = []
-        from_episode_id = 1
-        last_unit = 1
-        last_episode = Episode.objects.last()
-        if last_episode:
-            from_episode_id = last_episode.pk + 1
-            last_unit = self._get_unit_info(episode_id=last_episode.pk).unit
+        # Initial set up. None Episode on the database
+        from_episode_id = 2  # Not 1 because of a bug on BBC website
+        unit = 1
 
+        # Update. There are Episodes in the database
+        if Episode.objects.exists():
+            from_episode_id = Episode.objects.last().pk + 1
+            unit = self._get_unit_info(episode_id=from_episode_id).unit
+
+        # Run the fetching and parsing
+        result = []
         try:
-            while unit := self.get_unit(last_unit, from_episode_id):
-                for episode in unit:
+            while episodes := self.get_unit(unit, from_episode_id):
+                for episode in episodes:
                     result.append(episode)
-                last_unit += 1
-                from_episode_id = None  # Needed only on the first unit
+                unit += 1
+                # After the first iteration, get_unit() will return complete units.
+                # To do that, the parameter `from_episode_id` MUST be `None`.
+                from_episode_id = None
         except requests.exceptions.RequestException as e:
             print(f'Error: {e}')
 
