@@ -17,6 +17,7 @@ class NewsReview:
         self.session = requests.Session()
         self._episodes = []
         self._dates = []
+        self._next_unit = True
 
     def _parse_dates(self, bs: BeautifulSoup):
         items = bs.find_all('span', class_='date')
@@ -143,9 +144,9 @@ class NewsReview:
         for episode_id in range(start, end + 1):
             episode = self._get_episode(episode_id, unit)
             if not episode:
-                return False
+                self._next_unit = False
+                return self._episodes
             self._episodes.append(episode)
-
         return self._episodes
 
     def get_unit(self, unit: int, from_ep: int = None):
@@ -192,6 +193,8 @@ class NewsReview:
                 # After the first iteration, get_unit() will return complete units.
                 # To do that, the parameter `from_episode_id` MUST be `None`.
                 from_episode_id = None
+                if not self._next_unit:
+                    break
         except requests.exceptions.RequestException as e:
             print(f'Error: {e}')
 
