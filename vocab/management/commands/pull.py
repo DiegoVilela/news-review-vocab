@@ -2,12 +2,50 @@ from django.core.management import BaseCommand, CommandError
 from django.db import DatabaseError
 
 from vocab.bbc import NewsReview
+from vocab.models import Episode
+from vocab.youtube import Youtube, Video
+
+
+def similarity(a: list, b: list):
+    if not a or not b:
+        return 0
+
+    smaller = a
+    bigger = b
+    if len(b) > len(a):
+        smaller = b
+        bigger = a
+
+    count = 0
+    for i in smaller:
+        if i in bigger:
+            count += 1
+
+    return round(count / len(smaller) * 100)
+
+
+def get_videos():
+    service = Youtube(load_all=True)
+    videos = service.videos
+    # To better match the list from BBC
+    placeholder = Video(None, None, None)
+    videos.insert(6, placeholder)
+    videos.insert(179, placeholder)
+    return videos
+
+
+def get_episodes():
+    episodes = list(Episode.objects.order_by('-id'))
+    # To better match the list from Youtube
+    episodes.insert(170, Episode())
+    return episodes
 
 
 class Command(BaseCommand):
     help = 'Fetch and save episodes from BBC News Review.'
 
-    def handle(self, *args, **options):
+    def _update_episodes_from_bbc(self):
+        self.stdout.write('Fetching episodes from BBC News Review.')
         handler = NewsReview()
         result = handler.pull()
         if result:
@@ -17,4 +55,28 @@ class Command(BaseCommand):
             except DatabaseError as e:
                 raise CommandError(e)
 
-        self.stdout.write(self.style.SUCCESS(f'All updated.'))
+        self.stdout.write(self.style.SUCCESS('All updated.'))
+
+    def _update_videos_from_youtube(self):
+        self.stdout.write('Fetching video ids from Youtube.')
+        videos = get_videos()
+        episodes = get_episodes()
+
+        for idx, episode in enumerate(episodes):
+            video = videos[idx]
+            cleaned_episode = Youtube.clean(episode.headline).split()
+
+            if similarity(video.headline, cleaned_episode) < 50:
+                print(f'{video.headline}\n{cleaned_episode}')
+                print('Similarity: ', similarity(video.headline, cleaned_episode), '-' * 80, idx, '\n')
+            else:
+                episode.video = video.video_id
+                episode.save(update_fields=['video'])
+
+        total = Episode.objects.count()
+        without_video = Episode.objects.filter(video__isnull=True).count()
+        self.stdout.write(self.style.SUCCESS(f'{total = } {without_video = }'))
+
+    def handle(self, *args, **options):
+        self._update_episodes_from_bbc()
+        self._update_videos_from_youtube()

@@ -9,6 +9,7 @@ django-allauth = "*"
 requests = "*"
 beautifulsoup4 = "*"
 html5lib = "*"
+google-api-python-client = "*"
 
 [dev-packages]
 
