@@ -27,9 +27,6 @@ class Episode(models.Model):
     def get_absolute_url(self):
         return reverse('episode_detail', kwargs={'slug': self.slug})
 
-    class Meta:
-        ordering = ['-id']
-
 
 class Entry(models.Model):
     """The word or phrase presented in an Episode"""

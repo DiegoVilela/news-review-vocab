@@ -22,7 +22,7 @@ def episode_detail(request, slug):
 
 
 def episode_list(request):
-    episodes = Episode.objects.all()
+    episodes = Episode.objects.order_by('-id')
     paginator = Paginator(episodes, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)

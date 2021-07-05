@@ -3,7 +3,7 @@ from django.db import DatabaseError
 
 from vocab.bbc import NewsReview
 from vocab.models import Episode
-from vocab.youtube import Youtube, Video
+from vocab.youtube import service, Video
 
 
 def similarity(a: list, b: list):
@@ -25,7 +25,7 @@ def similarity(a: list, b: list):
 
 
 def get_videos():
-    service = Youtube(load_all=True)
+
     videos = service.videos
     # To better match the list from BBC
     placeholder = Video(None, None, None)
@@ -55,7 +55,7 @@ class Command(BaseCommand):
             except DatabaseError as e:
                 raise CommandError(e)
 
-        self.stdout.write(self.style.SUCCESS('All updated.'))
+        self.stdout.write(self.style.SUCCESS('All episodes in sync with BBC.'))
 
     def _update_videos_from_youtube(self):
         self.stdout.write('Fetching video ids from Youtube.')
@@ -64,9 +64,10 @@ class Command(BaseCommand):
 
         for idx, episode in enumerate(episodes):
             video = videos[idx]
-            cleaned_episode = Youtube.clean(episode.headline).split()
+            cleaned_episode = service.clean(episode.headline).split()
 
             if similarity(video.headline, cleaned_episode) < 50:
+                # episode.video = service.get_video_id(episode.headline, episode.date)
                 print(f'{video.headline}\n{cleaned_episode}')
                 print('Similarity: ', similarity(video.headline, cleaned_episode), '-' * 80, idx, '\n')
             else:
@@ -78,5 +79,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'{total = } {without_video = }'))
 
     def handle(self, *args, **options):
+        fetch_videos_in_bulk = False
+        if not Episode.objects.exists():
+            fetch_videos_in_bulk = True
+
         self._update_episodes_from_bbc()
-        self._update_videos_from_youtube()
+        if fetch_videos_in_bulk:
+            self._update_videos_from_youtube()
+
+        self.stdout.write('Fetching video ids from Youtube.')
+        for episode in Episode.objects.filter(video__isnull=True):
+            episode.video = service.get_video_id(episode.headline, episode.date)
+            episode.save(update_fields=['video'])
+        self.stdout.write(self.style.SUCCESS('All videos in sync with Youtube.'))
