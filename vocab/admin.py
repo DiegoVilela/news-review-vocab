@@ -7,7 +7,7 @@ class EntryInLine(admin.TabularInline):
     model = Entry
     extra = 3
     max_num = 3
-    fields = ('term', 'meaning')
+    fields = ('term',)
 
 
 @admin.register(Entry)

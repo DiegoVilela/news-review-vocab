@@ -25,8 +25,7 @@ def similarity(a: list, b: list):
 
 
 def get_videos():
-
-    videos = service.videos
+    videos = service.fetch_all()
     # To better match the list from BBC
     placeholder = Video(None, None, None)
     videos.insert(6, placeholder)
@@ -44,7 +43,7 @@ def get_episodes():
 class Command(BaseCommand):
     help = 'Fetch and save episodes from BBC News Review.'
 
-    def _update_episodes_from_bbc(self):
+    def _sync_episodes_from_bbc(self):
         self.stdout.write('Fetching episodes from BBC News Review.')
         handler = NewsReview()
         result = handler.pull()
@@ -57,7 +56,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('All episodes in sync with BBC.'))
 
-    def _update_videos_sequentially(self):
+    def _merge_videos_and_episodes(self):
         self.stdout.write('Fetching video ids from Youtube.')
         videos = get_videos()
         episodes = get_episodes()
@@ -82,18 +81,17 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'{total = } {without_video = }'))
 
     def handle(self, *args, **options):
-        self._update_episodes_from_bbc()
-
-        if not Episode.objects.exists():
-            self._update_videos_sequentially()
+        self._sync_episodes_from_bbc()
+        self._merge_videos_and_episodes()
 
         if episodes_missing_video := Episode.objects.filter(video__isnull=True):
             self.stdout.write('Fetching missing video ids from Youtube.')
             for episode in episodes_missing_video:
-                if video_id := service.get_video_id(episode.headline, episode.date):
-                    episode.video = video_id
-                else:
-                    episode.video = f'{episode.id} ?'
-                episode.save(update_fields=['video'])
+                print(f'Missing video: {episode.pk}. {episode.headline} | {episode.date}')
+                # if video_id := service.get_video_id(episode.headline, episode.date):
+                #     episode.video = video_id
+                # else:
+                #     episode.video = f'{episode.id} ?'
+                # episode.save(update_fields=['video'])
 
-            self.stdout.write(self.style.SUCCESS('All videos in sync with Youtube.'))
+        self.stdout.write(self.style.SUCCESS('All videos in sync with Youtube.'))
