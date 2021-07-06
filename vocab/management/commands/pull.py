@@ -26,7 +26,7 @@ def similarity(a: list, b: list):
 
 def get_videos():
 
-    videos = service.videos
+    videos = service.fetch_all()
     # To better match the list from BBC
     placeholder = Video(None, None, None)
     videos.insert(6, placeholder)

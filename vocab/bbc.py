@@ -128,9 +128,11 @@ class NewsReview:
             print(f'Getting episode {episode_id} ...')
             response = self.session.get(url_ep)
             response.raise_for_status()
+            if response.status_code == 404:
+                print(f'Episode {episode_id} was not published yet.')
             return self._parse_episode(response.content, episode_id)
         except requests.exceptions.RequestException as e:
-            print(f'Episode {episode_id} was not published yet.\n{e}')
+            print(f'Error: {e}')
             return False
 
     def _get_episodes(self, unit: int, from_ep: int = None):
@@ -185,17 +187,15 @@ class NewsReview:
 
         # Run the fetching and parsing
         result = []
-        try:
-            while episodes := self.get_unit(unit, from_episode_id):
-                for episode in episodes:
-                    result.append(episode)
-                unit += 1
-                # After the first iteration, get_unit() will return complete units.
-                # To do that, the parameter `from_episode_id` MUST be `None`.
-                from_episode_id = None
-                if not self._next_unit:
-                    break
-        except requests.exceptions.RequestException as e:
-            print(f'Error: {e}')
+
+        while episodes := self.get_unit(1, None):
+            for episode in episodes:
+                result.append(episode)
+            unit += 1
+            # After the first iteration, get_unit() will return complete units.
+            # To do that, the parameter `from_episode_id` MUST be `None`.
+            from_episode_id = None
+            if not self._next_unit:
+                break
 
         return result

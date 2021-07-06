@@ -1,9 +1,4 @@
-from pprint import pprint
-
 from django.core.management import BaseCommand, CommandError
-from django.db import DatabaseError
-
-from vocab.bbc import NewsReview
 from vocab.models import Entry
 
 
@@ -26,7 +21,8 @@ class Command(BaseCommand):
                 except ValueError:
                     idx = episode_content.index(entry.term)
                 finally:
+                    entry.meaning = episode_content[idx+1]
                     entry.examples = f'{episode_content[idx+2]}{episode_content[idx+3]}'
-                    entry.save()
+                    entry.save(update_fields=['meaning', 'examples'])
 
         self.stdout.write(self.style.SUCCESS(f'All examples set.'))
