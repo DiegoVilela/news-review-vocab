@@ -46,13 +46,10 @@ class Command(BaseCommand):
     def _sync_episodes_from_bbc(self):
         self.stdout.write('Fetching episodes from BBC News Review.')
         handler = NewsReview()
-        result = handler.pull()
-        if result:
-            try:
-                for episode in result:
-                    episode.save()
-            except DatabaseError as e:
-                raise CommandError(e)
+        try:
+            handler.pull()
+        except Exception as e:
+            raise CommandError(f'Error handling pull of episodes: {e}')
 
         self.stdout.write(self.style.SUCCESS('All episodes in sync with BBC.'))
 
@@ -66,7 +63,6 @@ class Command(BaseCommand):
             cleaned_episode = service.clean(episode.headline).split()
 
             if similarity(video.headline, cleaned_episode) < 50:
-                # episode.video = service.get_video_id(episode.headline, episode.date)
                 print(f'{video.headline}\n{cleaned_episode}')
                 print('Similarity: ', similarity(video.headline, cleaned_episode), '-' * 80, idx, '\n')
             else:

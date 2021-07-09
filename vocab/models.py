@@ -20,6 +20,11 @@ class Episode(models.Model):
         null=True,
         help_text="The videoId from Youtube."
     )
+    start_at = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        help_text="Second in which the summary starts."
+    )
 
     def __str__(self):
         return self.headline

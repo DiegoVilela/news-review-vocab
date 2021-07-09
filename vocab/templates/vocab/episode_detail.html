@@ -12,6 +12,16 @@
     <hr>
   {% endfor %}
 
-  <p>{{ episode.video }}</p>
+  <div class="videoWrapper">
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/{{ episode.video }}?start={{ episode.start_at }}"
+      title="YouTube video player"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+  </div>
 </article>
 {% endblock %}

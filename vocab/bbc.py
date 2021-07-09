@@ -190,6 +190,7 @@ class NewsReview:
 
         while episodes := self.get_unit(unit, from_episode_id):
             for episode in episodes:
+                episode.save()
                 result.append(episode)
             unit += 1
             # After the first iteration, get_unit() will return complete units.
