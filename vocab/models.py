@@ -27,7 +27,7 @@ class Episode(models.Model):
     )
 
     def __str__(self):
-        return self.headline
+        return f'{self.pk}. {self.headline} | {self.date}'
 
     def get_absolute_url(self):
         return reverse('episode_detail', kwargs={'slug': self.slug})

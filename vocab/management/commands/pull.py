@@ -83,11 +83,6 @@ class Command(BaseCommand):
         if episodes_missing_video := Episode.objects.filter(video__isnull=True):
             self.stdout.write('Fetching missing video ids from Youtube.')
             for episode in episodes_missing_video:
-                print(f'Missing video: {episode.pk}. {episode.headline} | {episode.date}')
-                # if video_id := service.get_video_id(episode.headline, episode.date):
-                #     episode.video = video_id
-                # else:
-                #     episode.video = f'{episode.id} ?'
-                # episode.save(update_fields=['video'])
+                print(f'Missing video: {episode}')
 
         self.stdout.write(self.style.SUCCESS('All videos in sync with Youtube.'))

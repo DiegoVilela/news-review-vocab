@@ -4,6 +4,7 @@ from collections import namedtuple
 from datetime import datetime
 from bs4 import BeautifulSoup
 from django.utils.text import slugify
+from requests.adapters import HTTPAdapter
 
 from vocab.models import Episode
 
@@ -14,7 +15,8 @@ UnitInfo = namedtuple('UnitInfo', ['unit', 'starting_episode', 'ending_episode']
 
 class NewsReview:
     def __init__(self):
-        self.session = requests.Session()
+        self._session = requests.Session()
+        self._session.mount('https://', HTTPAdapter(max_retries=3))
         self._episodes = []
         self._dates = []
         self._next_unit = True
@@ -126,7 +128,7 @@ class NewsReview:
         url_ep = f'{URL_BASE}{unit}/session-{episode_id}'
         try:
             print(f'Getting episode {episode_id} ...')
-            response = self.session.get(url_ep)
+            response = self._session.get(url_ep, timeout=5)
             response.raise_for_status()
             if response.status_code == 404:
                 print(f'Episode {episode_id} was not published yet.')
@@ -161,7 +163,7 @@ class NewsReview:
 
         episodes = self._get_episodes(unit, from_ep)
         url_unit = f'{URL_BASE}{unit}/'
-        response = self.session.get(url_unit)
+        response = self._session.get(url_unit)
         if response.ok:
             page = BeautifulSoup(response.content, features="html5lib")
             self._parse_dates(page)

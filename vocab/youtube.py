@@ -103,7 +103,6 @@ class _Youtube:
             try:
                 video_id = result['items'][0]['id']['videoId']
             except IndexError:
-                print(f'No results were found for the search "{q}", `publishedAfter` {published_after}')
                 video_id = None
         except HttpError as e:
             print(get_error_msg(e))
