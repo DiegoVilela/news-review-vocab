@@ -8,6 +8,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         episode = Episode.objects.filter(video__isnull=True).first()
+        if not episode:
+            self.stdout.write(self.style.SUCCESS('No video missing.'))
+            return
+
         if video_id := service.get_video_id(episode.headline, episode.date):
             episode.video = video_id
             episode.save(update_fields=['video'])
