@@ -12,6 +12,8 @@
     <hr>
   {% endfor %}
 
+  <button id="js-review-btn">Mark as reviewed</button>
+
   <div class="videoWrapper">
     <iframe
       width="560"
@@ -24,4 +26,9 @@
     </iframe>
   </div>
 </article>
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  {% include 'vocab/_review.html' %}
 {% endblock %}

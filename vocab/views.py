@@ -1,8 +1,14 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.sites.models import Site
 from django.core.paginator import Paginator
+from django.db import DatabaseError
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.response import TemplateResponse
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
-from vocab.models import Entry, Episode
+from vocab.models import Entry, Episode, Review
 
 
 def index(request):
@@ -16,8 +22,10 @@ def entry_detail(request, slug):
 
 
 def episode_detail(request, slug):
+    episode = get_object_or_404(Episode.objects.all(), slug=slug)
     return TemplateResponse(request, 'vocab/episode_detail.html', {
-        'episode': get_object_or_404(Episode.objects.all(), slug=slug)
+        'episode': episode,
+        'review_endpoint': reverse('episode_review', args=[episode.pk]),
     })
 
 
@@ -29,3 +37,17 @@ def episode_list(request):
     return render(request, 'vocab/episode_list.html', {
         'page_obj': page_obj,
     })
+
+
+@login_required
+@require_POST
+def mark_episode_as_reviewed(request, episode_id):
+    try:
+        Review.objects.create(user=request.user, episode_id=episode_id)
+    except DatabaseError as e:
+        print(f'Error saving the review: {e}')
+
+    return HttpResponse(
+        'Episode {episode_id} successfully marked reviewed by {request.user.username}',
+        content_type='text/plain',
+    )

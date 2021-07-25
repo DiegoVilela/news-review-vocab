@@ -1,0 +1,40 @@
+<script>
+  const button = document.getElementById('js-review-btn');
+
+  const getCookie = (name) => {
+    const cookie = document.cookie.split(';').find(
+      (cookie) => cookie.trim().substring(0, name.length + 1) === `${name}=`);
+    return decodeURIComponent(cookie.substring(name.length + 1));
+  };
+
+  const reviewEpisode = async () => {
+    return fetch('{{ review_endpoint }}', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+      mode: 'same-origin'  // Do not send CSRF token to another domain.
+    }).then((response) => response.ok);
+  };
+
+  const isUserAuthenticated = () => '{{ user.is_authenticated }}' === 'True';
+
+  const handleClick = async (event) => {
+    if (!isUserAuthenticated()) {
+      const path = "{% url 'account_login' %}";
+      const origin = window.location.origin;
+      console.log("debug", path);
+      window.location.replace(`${origin}${path}`);
+    }
+
+    try {
+      await reviewEpisode();
+      button.style.display = 'none';
+    } catch (e) {
+      console.log(`Error reviewing episode: ${e}`);
+    }
+  };
+
+  window.onload = () => {
+    button.style.display = 'inline-block';
+    button.addEventListener('click', handleClick);
+  }
+</script>

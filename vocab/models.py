@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.urls import reverse
@@ -52,3 +53,11 @@ class Entry(models.Model):
         if not self.slug:
             self.slug = slugify(self.term)
         return super().save(*args, **kwargs)
+
+
+class Review(models.Model):
+    """Each time a user review an Episode"""
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    when = models.DateTimeField(auto_now_add=True)
